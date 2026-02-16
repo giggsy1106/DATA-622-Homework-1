@@ -1,0 +1,108 @@
+import requests
+from bs4 import BeautifulSoup
+
+# -----------------------------
+# Question 1
+# -----------------------------
+# Retrieve https://www.visitmaryland.org/ and print HTTP status code
+
+url_maryland = "https://www.visitmaryland.org/"
+response_maryland = requests.get(url_maryland)
+
+print("QUESTION 1")
+print("URL:", url_maryland)
+print("HTTP Status Code:", response_maryland.status_code)
+print("-" * 60)
+
+
+# -----------------------------
+# Question 2
+# -----------------------------
+# Extract and print all visible text (ignore <script> and <style>)
+
+print("QUESTION 2")
+
+# Parse the HTML
+soup_maryland = BeautifulSoup(response_maryland.content, "html.parser")
+
+# Remove script and style tags completely
+for tag in soup_maryland(["script", "style"]):
+    tag.decompose()
+
+# Extract raw text
+text = soup_maryland.get_text()
+
+# Clean whitespace
+lines = (line.strip() for line in text.splitlines())
+chunks = (phrase.strip() for line in lines for phrase in line.split(" "))
+clean_text = "\n".join(chunk for chunk in chunks if chunk)
+
+# Print first 1000 characters to avoid huge output
+print(clean_text[:1000])
+print("\n[...truncated...]\nTotal characters:", len(clean_text))
+print("-" * 60)
+
+
+# -----------------------------
+# Question 3
+# -----------------------------
+# Fetch NLP Wikipedia page and print all <h1>, <h2>, <h3> headings
+
+print("QUESTION 3")
+
+url_nlp = "https://en.wikipedia.org/wiki/Natural_language_processing"
+response_nlp = requests.get(url_nlp)
+soup_nlp = BeautifulSoup(response_nlp.content, "html.parser")
+
+# Find all headings
+headings = soup_nlp.find_all(["h1", "h2", "h3"])
+
+# Print them with numbering
+for i, h in enumerate(headings, start=1):
+    print(f"{i}. <{h.name}> {h.get_text(strip=True)}")
+
+print("-" * 60)
+
+
+# -----------------------------
+# Question 4
+# -----------------------------
+# From the same Wikipedia page, print all link href values
+
+print("QUESTION 4")
+
+links = soup_nlp.find_all("a", href=True)
+
+for i, a in enumerate(links, start=1):
+    print(f"{i}. {a['href']}")
+
+print("Total links:", len(links))
+print("-" * 60)
+
+
+# -----------------------------
+# Question 5
+# -----------------------------
+# Extract first non-empty <p> and save to nlp_intro.txt
+
+print("QUESTION 5")
+
+paragraphs = soup_nlp.find_all("p")
+
+first_para_text = ""
+for p in paragraphs:
+    txt = p.get_text(strip=True)
+    if txt:  # ensure it's not empty
+        first_para_text = txt
+        break
+
+if first_para_text:
+    with open("nlp_intro.txt", "w", encoding="utf-8") as f:
+        f.write(first_para_text)
+
+    print("First paragraph saved to nlp_intro.txt")
+    print("Content:")
+    print(first_para_text)
+
+else:
+    print("No non-empty paragraph found.")
